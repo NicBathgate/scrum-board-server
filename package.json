@@ -1,0 +1,17 @@
+{
+  "name": "scrum-board-server",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "dotenv": "^6.0.0",
+    "moment": "^2.22.2",
+    "node-fetch": "^2.3.0"
+  },
+  "devDependencies": {
+    "@types/dotenv": "^4.0.3",
+    "@types/node-fetch": "^2.1.4",
+    "nodemon": "^1.18.4",
+    "ts-node": "^5.0.0",
+    "typescript": "^3.0.0"
+  }
+}
