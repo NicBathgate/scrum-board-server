@@ -34,7 +34,7 @@ app.get("/board/:id", async (req, res) => {
     const latestSprint = sprints.values
       .filter(sprint => sprint.startDate)
       .sort((a: Sprint, b: Sprint) => b.id - a.id)[0];
-    const fields = [
+    const storyFields = [
       "id",
       "key",
       "summary",
@@ -53,11 +53,28 @@ app.get("/board/:id", async (req, res) => {
       "customfield_11400",
       "customfield_10806"
     ];
-    const issuesUrl = `${
+    const storiesUrl = `${
       latestSprint.self
-    }/issue?maxResults=1000&jql=issuetype=Story&fields=${fields.toString()}`;
-    const stories: IssueList = await fetchAuth(issuesUrl);
-    res.json(stories.issues);
+    }/issue?maxResults=1000&jql=issuetype=Story&fields=${storyFields.toString()}`;
+    const stories: StoryList = await fetchAuth(storiesUrl);
+    const subtaskFields = [
+      "id",
+      "key",
+      "self",
+      "issuetype",
+      "priority",
+      "status",
+      "summary",
+      "assignee",
+      "parent",
+      "resolution",
+      "resolutiondate"
+    ];
+    const subtasksUrl = `${
+      latestSprint.self
+    }/issue?maxResults=1000&jql=issuetype=Sub-Task&fields=${subtaskFields.toString()}`;
+    const subtasks: SubtaskList = await fetchAuth(subtasksUrl);
+    res.json({ stories: stories.issues, subtasks: subtasks.issues });
   } catch (err) {
     console.log(err);
   }
@@ -70,7 +87,6 @@ app.listen(port, () => {
 
 const ATLASSIAN_USERNAME = process.env.ATLASSIAN_USERNAME || "";
 const ATLASSIAN_API_KEY = process.env.ATLASSIAN_API_KEY || "";
-const BOARD_NAME = "MKTG board";
 const JIRA_URL = "https://adinstruments.atlassian.net";
 
 async function getBoards() {
@@ -99,14 +115,14 @@ async function fetchAuth(url: string | Request, options?: RequestInit) {
   }
 }
 
-interface SprintList {
+export interface SprintList {
   maxResults: number;
   startAt: number;
   isLast: boolean;
   values: Sprint[];
 }
 
-interface Sprint {
+export interface Sprint {
   id: number;
   self: string;
   state: string;
@@ -117,42 +133,133 @@ interface Sprint {
   originBoardId: number;
 }
 
-interface IssueList {
+export interface IssueList {
   expand: string;
   startAt: number;
   maxResults: number;
   total: number;
   issues: Issue[];
 }
+export interface StoryList {
+  expand: string;
+  startAt: number;
+  maxResults: number;
+  total: number;
+  issues: Story[];
+}
+export interface SubtaskList {
+  expand: string;
+  startAt: number;
+  maxResults: number;
+  total: number;
+  issues: SubTask[];
+}
 
-interface Issue {
+export interface Issue {
   id: string;
   self: string;
   key: string;
-  fields: {
-    epic: {
-      id: number;
-      key: string;
-      self: string;
-      name: string;
-      summary: string;
-      done: boolean;
-    };
-    status: {
-      self: string;
-      name: string;
-    };
+  fields: IssueFields;
+}
+export interface Story {
+  id: string;
+  self: string;
+  key: string;
+  fields: StoryFields;
+}
+export interface SubTask {
+  id: string;
+  key: string;
+  self: string;
+  fields: SubtaskFields;
+}
+interface IssueFields {
+  issuetype: IssueType;
+  status: Status;
+  summary: string;
+  description: string;
+  assignee: Actor;
+  created?: Date;
+  creator: Actor;
+  labels?: string[];
+  priority: Priority;
+  reporter: Actor;
+  updated?: Date;
+}
+interface StoryFields extends IssueFields {
+  epic: {
+    id: number;
+    key: string;
+    self: string;
+    name: string;
     summary: string;
-    description: string;
-    customfield_10806: number;
+    done: boolean;
   };
+  closedSprints: [];
+  customfield_10806: number;
+  customfield_11400?: Actor[];
+  subtasks: SubTask[];
+}
+interface SubtaskFields extends IssueFields {
+  resolutiondate?: Date;
+  resolution?: { name: string };
+  parent?: Issue;
 }
 
-interface EpicList {
+export interface Sprint {
+  completeDate?: Date;
+  endDate?: Date;
+  startDate?: Date;
+  goal: string;
+  id: number;
+  name: string;
+  originBoardId: number;
+  self: string;
+  state: string;
+}
+
+interface Actor {
+  accountId: string;
+  active: boolean;
+  avatarUrls: {
+    "16x16": string;
+    "24x24": string;
+    "32x32": string;
+    "48x48": string;
+  };
+  displayName: string;
+  emailAddress: string;
+  name: string;
+  timeZone: string;
+}
+
+interface Status {
+  id: string;
+  iconUrl: string;
+  name: string;
+  self: string;
+}
+
+interface Priority {
+  id: string;
+  name: string;
+  self: string;
+  iconUrl: string;
+}
+
+interface IssueType {
+  id: string;
+  name: string;
+  iconUrl: string;
+  self: string;
+  subtask: boolean;
+}
+
+export interface EpicList {
   [epic: string]: Issue[];
 }
 
-interface BoardList {
+export interface BoardList {
   maxResults: number;
   startAt: number;
   total: number;
@@ -160,7 +267,7 @@ interface BoardList {
   values: Board[];
 }
 
-interface Board {
+export interface Board {
   id: number;
   self: string;
   name: string;
