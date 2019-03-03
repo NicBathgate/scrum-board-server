@@ -74,7 +74,15 @@ app.get("/board/:id", async (req, res) => {
       latestSprint.self
     }/issue?maxResults=1000&jql=issuetype=Sub-Task&fields=${subtaskFields.toString()}`;
     const subtasks: SubtaskList = await fetchAuth(subtasksUrl);
-    res.json({ stories: stories.issues, subtasks: subtasks.issues });
+
+    const storiesWithFullSubtasks = stories.issues.map(story => {
+      story.fields.subtasks = subtasks.issues.filter(
+        subtask => subtask.fields.parent.id === story.id
+      );
+      return story;
+    });
+
+    res.json({ stories: storiesWithFullSubtasks });
   } catch (err) {
     console.log(err);
   }
