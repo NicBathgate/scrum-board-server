@@ -6,7 +6,7 @@ import * as cors from "cors";
 // import moment from 'moment';
 
 const app = express();
-app.use(cors({ origin: "http://localhost:3000" }));
+app.use(cors({ origin: ["http://localhost:3000", "http://nbathgate.adi.co.nz:3000"] }));
 const port = 8080; // default port to listen
 
 // const router = express.Router();
