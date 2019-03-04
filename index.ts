@@ -6,7 +6,9 @@ import * as cors from "cors";
 // import moment from 'moment';
 
 const app = express();
-app.use(cors({ origin: ["http://localhost:3000", "http://nbathgate.adi.co.nz:3000"] }));
+app.use(
+  cors({ origin: ["http://localhost:3000", "http://nbathgate.adi.co.nz:3000"] })
+);
 const port = 8080; // default port to listen
 
 // const router = express.Router();
@@ -18,6 +20,17 @@ app.get("/", async (req, res) => {
   try {
     const boards = await getBoards();
     res.json(boards.values);
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+app.get("/board/:id/sprint", async (req, res) => {
+  try {
+    const sprintList = await fetchAuth(
+      `${JIRA_URL}/rest/agile/1.0/board/${req.params.id}/sprint?state=active`
+    );
+    res.json({ sprint: sprintList.values[0] });
   } catch (err) {
     console.log(err);
   }
