@@ -5,7 +5,7 @@ FROM node:8-alpine
 
 WORKDIR /usr/app
 
-COPY package.json tsconfig.json index.ts ./
+COPY package.json tsconfig.json index.ts .env ./
 RUN npm install --quiet
 
 #COPY ./src ./src
