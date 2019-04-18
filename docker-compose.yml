@@ -1,0 +1,17 @@
+version: "3.4"
+
+services:
+  client:
+    image: registry.kuracloud.com:5000/adinstruments/scrum-board-client:${MOPS_ENVIRONMENT:-dev}
+    ports:
+      - "3000:3000"
+    restart: always
+
+  server:
+    image: registry.kuracloud.com:5000/adinstruments/scrum-board-server:${MOPS_ENVIRONMENT:-dev}
+    environment:
+      ATLASSIAN_USERNAME:
+      ATLASSIAN_API_KEY:
+    ports:
+      - "8080:8080"
+    restart: always
