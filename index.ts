@@ -7,9 +7,16 @@ import * as cors from "cors";
 
 const app = express();
 app.use(
-  cors({ origin: ["http://localhost:3000", "http://nbathgate.adi.co.nz:3000"] })
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "http://nbathgate.adi.co.nz:3000",
+      "http://localhost:3001"
+    ]
+  })
 );
 const port = 8080; // default port to listen
+app.use(express.json());
 
 // const router = express.Router();
 // router.get('/', (req, res, next) => res.render('index', { title: 'Scrum Board' }));
@@ -20,6 +27,29 @@ app.get("/", async (req, res) => {
   try {
     const boards = await getBoards();
     res.json(boards.values);
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+app.post("/issue/:id/transitions", async (req, res) => {
+  try {
+    const options = {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        transition: req.body.transition
+      })
+    };
+
+    const result = await fetchAuth(
+      `${JIRA_URL}/rest/api/3/issue/${req.params.id}/transitions`,
+      options
+    );
+    res.json({ result });
   } catch (err) {
     console.log(err);
   }
@@ -119,7 +149,10 @@ async function getBoards() {
 
 async function fetchAuth(url: string | Request, options?: RequestInit) {
   let modifiedOptions = options === undefined ? {} : options;
-  let headers = new Headers();
+  let headers =
+    options && options.headers
+      ? new Headers(<Headers>options.headers)
+      : new Headers();
   headers.append(
     "Authorization",
     "Basic " +
@@ -128,11 +161,12 @@ async function fetchAuth(url: string | Request, options?: RequestInit) {
       )
   );
   modifiedOptions.headers = headers;
-  const result = await fetch(url, modifiedOptions);
-  if (result.ok) {
-    return await result.json();
+  const response = await fetch(url, modifiedOptions);
+  if (response.ok) {
+    if (response.status === 204) return response.status;
+    return await response.json();
   } else {
-    throw Error(`${result.status}: ${result.statusText}`);
+    throw Error(`${response.status}: ${response.statusText}`);
   }
 }
 
