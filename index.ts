@@ -56,9 +56,9 @@ passport.use(
     {
       clientID:
         process.env.APP_OAUTH_CLIENT_ID ||
-        "1096751681578-l0es6budgqaqo00omejcen6h02ahl5hl.apps.googleusercontent.com",
+        "126647422471-2t7pfb8rll2aic63hpgccjnuqjoidjj6.apps.googleusercontent.com",
       clientSecret:
-        process.env.APP_OAUTH_CLIENT_SECRET || "QKdwOLsjKYcEVHKN8Ye47ae2",
+        process.env.APP_OAUTH_CLIENT_SECRET || "W22ouUd81nbGDIsJmhIjr9o-",
       callbackURL: callbackBaseUrl + "/api/auth/google/callback",
       userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo"
     },
