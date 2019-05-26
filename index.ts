@@ -22,9 +22,9 @@ app.use(express.json());
 const sessionOptions = {
   secret: process.env.APP_SESSION_SECRET || "secrettexthere",
   saveUninitialized: true,
-  resave: true,
+  resave: false,
   name: "sessionid", // Our own cookie name so others don't know we're running Node.
-  cookie: { secure: false }
+  cookie: { secure: false } // allows cookies to be used without https
 };
 app.use(session(sessionOptions));
 app.use(passport.initialize());
@@ -36,6 +36,8 @@ function isAuthenticated(
   res: express.Response,
   next: express.NextFunction
 ) {
+  console.log(req.isAuthenticated());
+  console.log(req.session);
   if (req.isAuthenticated()) {
     return next();
   }
