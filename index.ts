@@ -39,6 +39,7 @@ function isAuthenticated(
   if (req.isAuthenticated()) {
     return next();
   }
+  // TODO: this is bypassing the authentication till I get it working
   // } else {
   //   res.status(401).send("not authenticated");
   //   return next("not authenticated");
@@ -66,6 +67,7 @@ passport.use(
       userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo"
     },
     (accessToken, refreshToken, profile, done) => {
+      // TODO: might need to add this back in to check user has adinstruments.com email?
       // if (profile._json.hd !== "adinstruments.com") {
       //   https.get(
       //     "https://accounts.google.com/o/oauth2/revoke?token=" + accessToken,
