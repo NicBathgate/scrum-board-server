@@ -40,12 +40,12 @@ function isAuthenticated(
   console.log(req.session);
   if (req.isAuthenticated()) {
     return next();
+    // }
+    // TODO: this is bypassing the authentication till I get it working
+  } else {
+    res.status(401).send("not authenticated");
+    return next("not authenticated");
   }
-  // TODO: this is bypassing the authentication till I get it working
-  // } else {
-  //   res.status(401).send("not authenticated");
-  //   return next("not authenticated");
-  // }
   return next();
 }
 passport.serializeUser((user, done) => {
@@ -117,7 +117,7 @@ app.get("/api/auth/google/callback", function(
         return next(Error("Failed to login after authenticating" + err));
       }
       // TODO: this won't work in production, redirect to "/" instead?
-      res.redirect("http://localhost:3000");
+      res.redirect("/");
     });
   })(req, res, next);
 });

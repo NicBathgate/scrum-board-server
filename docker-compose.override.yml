@@ -5,6 +5,28 @@ services:
     build:
       context: ../scrum-board
       dockerfile: Dockerfile.dev
+    volumes:
+      - node_modules:/usr/src/app/node_modules
+      - ../scrum-board/src:/usr/src/app/src:ro
+      - ../scrum-board/public:/usr/src/app/public:ro
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+      MOPS_ENVIRONMENT: dev
+      NODE_ENV: development
+
+  nginx:
+    environment:
+      MOPS_ENVIRONMENT: dev
+    ports:
+      - 8080:80
 
   server:
     build: ./
+    environment:
+      MOPS_ENVIRONMENT: dev
+      NODE_ENV: development
+    volumes:
+      - ./src:/usr/app/src
+
+volumes:
+  node_modules:

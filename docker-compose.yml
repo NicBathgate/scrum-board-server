@@ -14,4 +14,22 @@ services:
       ATLASSIAN_API_KEY:
     ports:
       - "8080:8080"
+    volumes:
+      - "nginx-sites:/app/nginx-sites"
     restart: always
+
+  nginx:
+    image: nginx
+    environment:
+      MOPS_ENVIRONMENT:
+    depends_on:
+      - server
+      - client
+    volumes:
+      - "nginx-sites:/etc/nginx/conf.d"
+      - "nginx-certs:/etc/nginx/ssl"
+    restart: always
+
+volumes:
+  nginx-sites:
+  nginx-certs:
