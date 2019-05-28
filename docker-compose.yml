@@ -3,8 +3,6 @@ version: "3.4"
 services:
   client:
     image: registry.kuracloud.com:5000/adinstruments/scrum-board-client:${MOPS_ENVIRONMENT:-dev}
-    ports:
-      - "3000:3000"
     restart: always
 
   server:
@@ -12,22 +10,18 @@ services:
     environment:
       ATLASSIAN_USERNAME:
       ATLASSIAN_API_KEY:
-    ports:
-      - "8080:8080"
-    volumes:
-      - "nginx-sites:/app/nginx-sites"
     restart: always
 
   nginx:
-    image: nginx
+    image: registry.kuracloud.com:5000/adinstruments/scrum-board-nginx:${MOPS_ENVIRONMENT:-dev}
     environment:
       MOPS_ENVIRONMENT:
     depends_on:
       - server
       - client
-    volumes:
-      - "nginx-sites:/etc/nginx/conf.d"
-      - "nginx-certs:/etc/nginx/ssl"
+#    volumes:
+#      - "nginx-sites:/etc/nginx/conf.d"
+#      - "nginx-certs:/etc/nginx/ssl"
     restart: always
 
 volumes:

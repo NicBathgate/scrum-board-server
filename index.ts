@@ -5,6 +5,7 @@ import * as https from "https";
 import * as session from "express-session";
 import * as passport from "passport";
 import * as GoogleStrategy from "passport-google-oauth20";
+import * as bodyParser from "body-parser";
 
 const app = express();
 app.use(
@@ -22,13 +23,10 @@ app.use(express.json());
 const sessionOptions = {
   secret: process.env.APP_SESSION_SECRET || "secrettexthere",
   saveUninitialized: true,
-  resave: false,
-  name: "sessionid", // Our own cookie name so others don't know we're running Node.
-  cookie: { secure: false } // allows cookies to be used without https
+  resave: true,
+  name: "sessionid" // Our own cookie name so others don't know we're running Node.
+  //cookie: { secure: false } // allows cookies to be used without https
 };
-app.use(session(sessionOptions));
-app.use(passport.initialize());
-app.use(passport.session());
 
 // passport setup
 function isAuthenticated(
@@ -52,6 +50,8 @@ passport.serializeUser((user, done) => {
   done(null, user);
 });
 passport.deserializeUser((user, done) => {
+  console.log("DESERUAKUZE!");
+  console.log(user);
   done(null, user);
 });
 
@@ -81,6 +81,12 @@ passport.use(
     }
   )
 );
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(session(sessionOptions));
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Routes
 app.get(
