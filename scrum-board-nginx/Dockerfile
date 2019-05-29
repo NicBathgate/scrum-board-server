@@ -1,6 +1,6 @@
 FROM nginx
 
-COPY *.conf /app/nginx-sites-available
+COPY *.conf /app/nginx-sites-available/
 
 COPY ["docker-entrypoint.sh", "/docker-entrypoint.sh"]
 RUN chmod +x /docker-entrypoint.sh
