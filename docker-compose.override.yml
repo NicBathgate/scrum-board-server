@@ -11,15 +11,13 @@ services:
       NODE_ENV: development
 
   server:
-    build: ./
+    build: ./server
     environment:
       MOPS_ENVIRONMENT: dev
       NODE_ENV: development
 
   nginx:
-    build:
-      context: ./
-      dockerfile: Dockerfile.nginx
+    build: ./nginx
     environment:
       MOPS_ENVIRONMENT: dev
     ports:

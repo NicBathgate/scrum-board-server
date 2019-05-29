@@ -36,14 +36,12 @@ function isAuthenticated(
 ) {
   console.log(req.isAuthenticated());
   console.log(req.session);
-  if (req.isAuthenticated()) {
-    return next();
-    // }
-    // TODO: this is bypassing the authentication till I get it working
-  } else {
-    res.status(401).send("not authenticated");
-    return next("not authenticated");
-  }
+  // if (req.isAuthenticated()) {
+  //   return next();
+  // } else {
+  //   res.status(401).send("not authenticated");
+  //   return next("not authenticated");
+  // }
   return next();
 }
 passport.serializeUser((user, done) => {
