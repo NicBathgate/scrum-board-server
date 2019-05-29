@@ -34,15 +34,12 @@ function isAuthenticated(
   res: express.Response,
   next: express.NextFunction
 ) {
-  console.log(req.isAuthenticated());
-  console.log(req.session);
-  // if (req.isAuthenticated()) {
-  //   return next();
-  // } else {
-  //   res.status(401).send("not authenticated");
-  //   return next("not authenticated");
-  // }
-  return next();
+  if (req.isAuthenticated()) {
+    return next();
+  } else {
+    res.status(401).send("not authenticated");
+    return next("not authenticated");
+  }
 }
 passport.serializeUser((user, done) => {
   done(null, user);
