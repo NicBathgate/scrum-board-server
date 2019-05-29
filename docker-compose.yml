@@ -4,12 +4,15 @@ services:
   client:
     image: registry.kuracloud.com:5000/adinstruments/scrum-board-client:${MOPS_ENVIRONMENT:-dev}
     restart: always
+  environment:
+    MOPS_ENVIRONMENT:
 
   server:
     image: registry.kuracloud.com:5000/adinstruments/scrum-board-server:${MOPS_ENVIRONMENT:-dev}
     environment:
       ATLASSIAN_USERNAME:
       ATLASSIAN_API_KEY:
+      MOPS_ENVIRONMENT:
     restart: always
 
   nginx:
@@ -23,6 +26,8 @@ services:
 #      - "nginx-sites:/etc/nginx/conf.d"
 #      - "nginx-certs:/etc/nginx/ssl"
     restart: always
+    ports:
+      - 80:80
 
 volumes:
   nginx-sites:
