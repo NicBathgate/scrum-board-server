@@ -11,13 +11,13 @@ services:
       NODE_ENV: development
 
   server:
-    build: ./server
+    build: server
     environment:
       MOPS_ENVIRONMENT: dev
       NODE_ENV: development
 
   nginx:
-    build: ./nginx
+    build: scrum-board-nginx
     environment:
       MOPS_ENVIRONMENT: dev
     ports:
