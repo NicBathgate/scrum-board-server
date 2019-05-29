@@ -3,7 +3,7 @@
 
 FROM node:8-alpine
 #COPY package.json yarn.lock tsconfig.json ./
-COPY package.json tsconfig.json index.ts api.ts types.ts .env ./
+COPY package.json tsconfig.json index.ts api.ts types.ts ./
 #RUN yarn install --quiet
 RUN npm install --quiet
 
