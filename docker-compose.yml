@@ -4,8 +4,8 @@ services:
   client:
     image: registry.kuracloud.com:5000/adinstruments/scrum-board-client:${MOPS_ENVIRONMENT:-dev}
     restart: always
-  environment:
-    MOPS_ENVIRONMENT:
+    environment:
+      MOPS_ENVIRONMENT:
 
   server:
     image: registry.kuracloud.com:5000/adinstruments/scrum-board-server:${MOPS_ENVIRONMENT:-dev}
