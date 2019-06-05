@@ -34,7 +34,7 @@ function isAuthenticated(
   res: express.Response,
   next: express.NextFunction
 ) {
-  if (req.isAuthenticated()) {
+  if (process.env.NODE_ENV === "development" || req.isAuthenticated()) {
     return next();
   } else {
     res.status(401).send("not authenticated");
@@ -45,8 +45,6 @@ passport.serializeUser((user, done) => {
   done(null, user);
 });
 passport.deserializeUser((user, done) => {
-  console.log("DESERUAKUZE!");
-  console.log(user);
   done(null, user);
 });
 
