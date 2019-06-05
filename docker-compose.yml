@@ -13,6 +13,7 @@ services:
       ATLASSIAN_USERNAME:
       ATLASSIAN_API_KEY:
       MOPS_ENVIRONMENT:
+      APP_ROOT_URL:
     restart: always
 
   nginx:
