@@ -131,9 +131,9 @@ app.get("/api/logout", function(req: express.Request, res: express.Response) {
 const api = require("./api");
 app.use("/api", isAuthenticated, api);
 
-app.get("/*", function(req: express.Request, res: express.Response) {
-  return res.json("index");
-});
+// app.get("/*", function(req: express.Request, res: express.Response) {
+//   return res.json("index");
+// });
 
 // start the Express server
 app.listen(port, () => {
