@@ -1,4 +1,5 @@
 require("dotenv").config();
+const path = require("path");
 import * as express from "express";
 import * as cors from "cors";
 import * as https from "https";
@@ -115,7 +116,6 @@ app.get("/api/auth/google/callback", function(
         console.error(err);
         return next(Error("Failed to login after authenticating" + err));
       }
-      // TODO: this won't work in production, redirect to "/" instead?
       res.redirect("/");
     });
   })(req, res, next);
@@ -130,6 +130,11 @@ app.get("/api/logout", function(req: express.Request, res: express.Response) {
 
 const api = require("./api");
 app.use("/api", isAuthenticated, api);
+
+// Handles any requests that don't match the ones above
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname + "/client/build/index.html"));
+});
 
 // start the Express server
 app.listen(port, () => {
