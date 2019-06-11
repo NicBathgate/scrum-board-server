@@ -55,6 +55,32 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.post("/issue", async (req, res) => {
+  try {
+    const issueBody = {
+      fields: {
+        project: req.body.project,
+        parent: req.body.parent,
+        summary: req.body.summary,
+        description: req.body.description,
+        issuetype: req.body.issuetype
+      }
+    };
+    const options = {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(issueBody)
+    };
+    const result = await fetchAuth(`${JIRA_URL}/rest/api/3/issue`, options);
+    res.json({ result });
+  } catch (err) {
+    console.log(err);
+  }
+});
+
 router.post("/issue/:id/transitions", async (req, res) => {
   try {
     const options = {
