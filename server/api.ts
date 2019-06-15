@@ -55,6 +55,17 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/issue/:id", async (req, res) => {
+  try {
+    const issue = await fetchAuth(
+      `${JIRA_URL}/rest/api/3/issue/${req.params.id}`
+    );
+    res.json(issue);
+  } catch (err) {
+    console.log(err);
+  }
+});
+
 router.post("/issue", async (req, res) => {
   try {
     const issueBody = {
@@ -63,7 +74,8 @@ router.post("/issue", async (req, res) => {
         parent: req.body.parent,
         summary: req.body.summary,
         description: req.body.description,
-        issuetype: req.body.issuetype
+        issuetype: req.body.issuetype,
+        assignee: req.body.assignee
       }
     };
     const options = {
@@ -75,7 +87,7 @@ router.post("/issue", async (req, res) => {
       body: JSON.stringify(issueBody)
     };
     const result = await fetchAuth(`${JIRA_URL}/rest/api/3/issue`, options);
-    res.json({ result });
+    res.json(result);
   } catch (err) {
     console.log(err);
   }
