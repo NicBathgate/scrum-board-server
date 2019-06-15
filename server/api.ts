@@ -140,7 +140,9 @@ router.get("/board/:id", async (req, res) => {
     const storyFields = [
       "id",
       "key",
+      "project",
       "summary",
+      "description",
       "issuetype",
       "assignee",
       "closedSprints",
@@ -154,7 +156,9 @@ router.get("/board/:id", async (req, res) => {
       "subtasks",
       "updated",
       "customfield_11400",
-      "customfield_10806"
+      "customfield_10806",
+      "comment",
+      "attachment"
     ];
     const storiesUrl = `${
       latestSprint.self
@@ -168,10 +172,12 @@ router.get("/board/:id", async (req, res) => {
       "priority",
       "status",
       "summary",
+      "description",
       "assignee",
       "parent",
       "resolution",
-      "resolutiondate"
+      "resolutiondate",
+      "comment"
     ];
     const subtasksUrl = `${
       latestSprint.self
