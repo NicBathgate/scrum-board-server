@@ -28,6 +28,7 @@ services:
     restart: always
     ports:
       - 80:80
+      - 443:443
 
   # This container just grabs the SSL stuff from vault and then goes away
   vault:
