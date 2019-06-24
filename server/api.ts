@@ -78,6 +78,7 @@ router.post("/issue", async (req, res) => {
         assignee: req.body.assignee
       }
     };
+    console.log(issueBody);
     const options = {
       method: "POST",
       headers: {
