@@ -23,13 +23,25 @@ services:
     depends_on:
       - server
       - client
-#    volumes:
-#      - "nginx-sites:/etc/nginx/conf.d"
-#      - "nginx-certs:/etc/nginx/ssl"
+    volumes:
+      - "nginx-certs:/etc/nginx/ssl"
     restart: always
     ports:
       - 80:80
+      - 443:443
+
+  # This container just grabs the SSL stuff from vault and then goes away
+  vault:
+    image: vault
+    environment:
+      VAULT_ADDR: https://vault.kuracloud.com:8200/
+      VAULT_TOKEN:
+      VAULT_CONTEXT: live
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - "nginx-certs:/etc/nginx/certs"
+    command: sh -c "vault read -field=value secret/ssl/adinstruments.com.chained.crt > /etc/nginx/certs/adinstruments.com.crt && vault read -field=value secret/ssl/adinstruments.com.key > /etc/nginx/certs/adinstruments.com.key"
 
 volumes:
-  nginx-sites:
   nginx-certs:
