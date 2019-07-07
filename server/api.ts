@@ -66,6 +66,7 @@ router.get("/issue/:id", async (req, res) => {
   }
 });
 
+// Create subtask
 router.post("/issue", async (req, res) => {
   try {
     const issueBody = {
@@ -87,6 +88,61 @@ router.post("/issue", async (req, res) => {
       body: JSON.stringify(issueBody)
     };
     const result = await fetchAuth(`${JIRA_URL}/rest/api/3/issue`, options);
+    const assignOptions = {
+      method: "PUT",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        accountId: req.body.assignee.id
+      })
+    };
+    const assignResult = await fetchAuth(
+      `${JIRA_URL}/rest/api/3/issue/${result.key}/assignee`,
+      assignOptions
+    );
+    res.json(result);
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+// Edit subtask
+router.post("/issue/:key", async (req, res) => {
+  try {
+    const options = {
+      method: "PUT",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        fields: {
+          summary: req.body.summary
+        }
+      })
+    };
+    const result = await fetchAuth(
+      `${JIRA_URL}/rest/api/3/issue/${req.params.key}`,
+      options
+    );
+
+    const assignOptions = {
+      method: "PUT",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        accountId: req.body.assignee.id
+      })
+    };
+    const assignResult = await fetchAuth(
+      `${JIRA_URL}/rest/api/3/issue/${req.params.key}/assignee`,
+      assignOptions
+    );
+    console.log(result);
     res.json(result);
   } catch (err) {
     console.log(err);
@@ -156,9 +212,9 @@ router.get("/board/:id", async (req, res) => {
       "subtasks",
       "updated",
       "customfield_11400",
-      "customfield_10806",
-      "comment",
-      "attachment"
+      "customfield_10806"
+      //"comment",
+      //"attachment"
     ];
     const storiesUrl = `${
       latestSprint.self
@@ -176,8 +232,8 @@ router.get("/board/:id", async (req, res) => {
       "assignee",
       "parent",
       "resolution",
-      "resolutiondate",
-      "comment"
+      "resolutiondate"
+      //"comment"
     ];
     const subtasksUrl = `${
       latestSprint.self
