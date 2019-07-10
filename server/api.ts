@@ -79,7 +79,6 @@ router.post("/issue", async (req, res) => {
         assignee: req.body.assignee
       }
     };
-    console.log(issueBody);
     const options = {
       method: "POST",
       headers: {
@@ -88,6 +87,7 @@ router.post("/issue", async (req, res) => {
       },
       body: JSON.stringify(issueBody)
     };
+    console.log(`Creating issue: /rest/api/3/issue`);
     const result = await fetchAuth(`${JIRA_URL}/rest/api/3/issue`, options);
     const assignOptions = {
       method: "PUT",
@@ -99,6 +99,7 @@ router.post("/issue", async (req, res) => {
         accountId: req.body.assignee.id
       })
     };
+    console.log(`Assigning issue: /rest/api/3/issue/${result.key}/assignee`);
     const assignResult = await fetchAuth(
       `${JIRA_URL}/rest/api/3/issue/${result.key}/assignee`,
       assignOptions
@@ -124,6 +125,7 @@ router.post("/issue/:key", async (req, res) => {
         }
       })
     };
+    console.log(`Editing issue: /rest/api/3/issue/${req.params.key}`);
     const result = await fetchAuth(
       `${JIRA_URL}/rest/api/3/issue/${req.params.key}`,
       options
@@ -139,11 +141,13 @@ router.post("/issue/:key", async (req, res) => {
         accountId: req.body.assignee.id
       })
     };
+    console.log(
+      `Assigning issue: /rest/api/3/issue/${req.params.key}/assignee`
+    );
     const assignResult = await fetchAuth(
       `${JIRA_URL}/rest/api/3/issue/${req.params.key}/assignee`,
       assignOptions
     );
-    console.log(result);
     res.json(result);
   } catch (err) {
     console.log(err);
