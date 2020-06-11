@@ -215,7 +215,7 @@ router.get("/board/:id", async (req, res) => {
       "priority",
       "reporter",
       "status",
-      "subtasks",
+      //"subtasks",
       "updated",
       "customfield_11400",
       "customfield_10806",
@@ -226,7 +226,7 @@ router.get("/board/:id", async (req, res) => {
     ];
     const storiesUrl = `${
       latestSprint.self
-    }/issue?maxResults=1000&jql=issuetype=Story&fields=${storyFields.toString()}`;
+    }/issue?maxResults=1000&fields=${storyFields.toString()}`;
     const stories: StoryList = await fetchAuth(storiesUrl);
     const subtaskFields = [
       "id",
@@ -257,7 +257,7 @@ router.get("/board/:id", async (req, res) => {
     const subtasks: SubtaskList = await fetchAuth(`${JIRA_URL}/rest/api/3/search`, options);
 
     const mappedStories: Story[] = stories.issues.map(story => {
-      const epic = story.fields.epic || {
+      const epic = story.fields.epic || story.fields.parent && {
         id: story.fields.parent.id,
         key: story.fields.parent.key,
         self: story.fields.parent.self,
