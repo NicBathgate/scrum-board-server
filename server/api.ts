@@ -5,7 +5,7 @@ import {
   Sprint,
   SprintList,
   Story,
-  StoryList,
+  StoryList, SubTask,
   SubtaskList
 } from "./types";
 import fetch, { Headers, Request, RequestInit } from "node-fetch";
@@ -243,10 +243,18 @@ router.get("/board/:id", async (req, res) => {
       "resolutiondate"
       //"comment"
     ];
-    const subtasksUrl = `${
-      latestSprint.self
-    }/issue?maxResults=1000&jql=issuetype=Sub-Task&fields=${subtaskFields.toString()}`;
-    const subtasks: SubtaskList = await fetchAuth(subtasksUrl);
+    const options = {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        "jql": stories.issues.map(story => `parent = ${story.key}`).join(' OR '),
+        "fields": subtaskFields,
+      })
+    };
+    const subtasks: SubtaskList = await fetchAuth(`${JIRA_URL}/rest/api/3/search`, options);
 
     const mappedStories: Story[] = stories.issues.map(story => {
       const epic = story.fields.epic || {
@@ -256,6 +264,7 @@ router.get("/board/:id", async (req, res) => {
         name: story.fields.parent.fields.summary,
         summary: story.fields.parent.fields.summary,
         done: story.fields.parent.fields.status.name === 'Done',
+        color: undefined,
       };
       const fields = { ...story.fields, epic };
       return { ...story, fields };
