@@ -77,6 +77,21 @@ interface StoryFields extends IssueFields {
     name: string;
     summary: string;
     done: boolean;
+    color: string;
+  };
+  parent: {
+    id: number;
+    key: string;
+    self: string;
+    fields: {
+      summary: string;
+      issuetype: {
+        name: string;
+      },
+      status: {
+        name: string;
+      }
+    }
   };
   closedSprints: [];
   customfield_10016: number;

@@ -4,6 +4,7 @@ import {
   BoardList,
   Sprint,
   SprintList,
+  Story,
   StoryList,
   SubtaskList
 } from "./types";
@@ -247,7 +248,20 @@ router.get("/board/:id", async (req, res) => {
     }/issue?maxResults=1000&jql=issuetype=Sub-Task&fields=${subtaskFields.toString()}`;
     const subtasks: SubtaskList = await fetchAuth(subtasksUrl);
 
-    const storiesWithFullSubtasks = stories.issues.map(story => {
+    const mappedStories: Story[] = stories.issues.map(story => {
+      const epic = story.fields.epic || {
+        id: story.fields.parent.id,
+        key: story.fields.parent.key,
+        self: story.fields.parent.self,
+        name: story.fields.parent.fields.summary,
+        summary: story.fields.parent.fields.summary,
+        done: story.fields.parent.fields.status.name === 'Done',
+      };
+      const fields = { ...story.fields, epic };
+      return { ...story, fields };
+    });
+
+    const storiesWithFullSubtasks = mappedStories.map(story => {
       story.fields.subtasks = subtasks.issues.filter(
         subtask => subtask.fields.parent.id === story.id
       );
