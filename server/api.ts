@@ -243,6 +243,7 @@ router.get("/board/:id", async (req, res) => {
       "resolutiondate"
       //"comment"
     ];
+    // TODO: if 100 subtasks are received, send a second request with 'startAt 100' and join results with subtasks array
     const options = {
       method: "POST",
       headers: {
