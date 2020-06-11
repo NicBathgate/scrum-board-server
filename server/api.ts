@@ -259,6 +259,24 @@ router.get("/board/:id", async (req, res) => {
     };
     const subtasks: SubtaskList = await fetchAuth(`${JIRA_URL}/rest/api/3/search`, options);
 
+    const epicRequestOptions = {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        "jql": stories.issues
+          .map(story => story.fields.parent && story.fields.parent.key)
+          .filter((key, index, stories) => key !== undefined && stories.indexOf(key) === index)
+          .map(epicKey => `issuekey = ${epicKey}`).join(' OR '),
+        "fields": ["key","customfield_10017"],
+        "maxResults":100,
+        "startAt":0
+      })
+    };
+    const epicColors = await fetchAuth(`${JIRA_URL}/rest/api/3/search`, epicRequestOptions);
+
     const mappedStories: Story[] = stories.issues.map(story => {
       const epic = story.fields.epic || story.fields.parent && {
         id: story.fields.parent.id,
@@ -267,7 +285,7 @@ router.get("/board/:id", async (req, res) => {
         name: story.fields.parent.fields.summary,
         summary: story.fields.parent.fields.summary,
         done: story.fields.parent.fields.status.name === 'Done',
-        color: undefined,
+        color: epicColors.issues.find(epic => epic.key === story.fields.parent.key).fields.customfield_10017 || 'purple',
       };
       const fields = { ...story.fields, epic };
       return { ...story, fields };
