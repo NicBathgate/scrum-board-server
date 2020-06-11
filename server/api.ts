@@ -12,7 +12,7 @@ const router = express.Router();
 
 const ATLASSIAN_USERNAME = process.env.ATLASSIAN_USERNAME || "";
 const ATLASSIAN_API_KEY = process.env.ATLASSIAN_API_KEY || "";
-const JIRA_URL = "https://adinstruments.atlassian.net";
+const JIRA_URL = "https://tracplus.atlassian.net";
 
 async function getBoards() {
   // Fetch board/sprint information from Jira
@@ -217,7 +217,9 @@ router.get("/board/:id", async (req, res) => {
       "subtasks",
       "updated",
       "customfield_11400",
-      "customfield_10806"
+      "customfield_10806",
+      "parent",
+      "customfield_10016", // storypoints
       //"comment",
       //"attachment"
     ];
