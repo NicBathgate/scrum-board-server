@@ -252,6 +252,8 @@ router.get("/board/:id", async (req, res) => {
       body: JSON.stringify({
         "jql": stories.issues.map(story => `parent = ${story.key}`).join(' OR '),
         "fields": subtaskFields,
+        "maxResults":100,
+        "startAt":0
       })
     };
     const subtasks: SubtaskList = await fetchAuth(`${JIRA_URL}/rest/api/3/search`, options);
