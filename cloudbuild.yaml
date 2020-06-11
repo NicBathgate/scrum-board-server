@@ -1,0 +1,109 @@
+steps:
+  # The Dockerfile needs github credentials to build. First grab those.
+  # Also copy them to /root/.ssh for later build steps
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gsutil cp gs://${PROJECT_ID}-cloudbuilder/id_rsa.enc id_rsa.enc
+        mkdir keys
+        gcloud kms decrypt \
+          --ciphertext-file=id_rsa.enc \
+          --plaintext-file=keys/id_rsa \
+          --location=global \
+          --keyring=tracplusbuild \
+          --key=github
+        chmod 600 keys/id_rsa
+        cat <<EOF > keys/config
+        Hostname github.com
+        IdentityFile /root/.ssh/id_rsa
+        EOF
+        gsutil cp gs://${PROJECT_ID}-cloudbuilder/known_hosts keys/known_hosts
+        cp keys/* /root/.ssh
+    volumes:
+      - name: 'ssh'
+        path: /root/.ssh
+
+  # build the image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/${PROJECT_ID}/${_IMAGE_NAME}:${TAG_NAME}'
+      - '.'
+
+  # clone the manifests repo
+  - name: 'gcr.io/cloud-builders/git'
+    args:
+      - 'clone'
+      - 'git@github.com:tracplus/playground-manifests'
+    volumes:
+      - name: 'ssh'
+        path: /root/.ssh
+
+  # patch the k8s manifest
+  - name: 'gcr.io/cloud-builders/kubectl'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        # given we are using a bash entrypoint we need to manually retrieve cluster credentials
+        gcloud container clusters get-credentials --zone "$$CLOUDSDK_COMPUTE_ZONE" "$$CLOUDSDK_CONTAINER_CLUSTER"
+        cd playground-manifests
+        # Generate a patch file for the deployment, updating the image
+        cat <<EOF > patch.yaml
+        metadata:
+          namespace: ${_DEPLOYMENT_NAMESPACE}
+        spec:
+          template:
+            spec:
+              containers:
+                - name: ${_IMAGE_NAME}
+                  image: gcr.io/${PROJECT_ID}/${_IMAGE_NAME}:${TAG_NAME}
+        EOF
+        kubectl patch --local -o yaml -f ${_DEPLOYMENT_PATH}/00-deployment.yaml -p "$(cat patch.yaml)" > 00-deployment.yaml
+        mv 00-deployment.yaml ${_DEPLOYMENT_PATH}/00-deployment.yaml
+    env:
+      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=playground'
+
+  # commit the new manifest
+  - name: 'gcr.io/cloud-builders/git'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        # path doesn't persist between build steps
+        cd playground-manifests
+        # Retrive the service account details
+        ACTIVE_ACCOUNT=$(gcloud auth list --filter=status:ACTIVE --format="value(account)")
+        # Commit metadata
+        git config user.email "$${ACTIVE_ACCOUNT}"
+        git config user.name "Google Container Builder"
+        git add ${_DEPLOYMENT_PATH}/00-deployment.yaml
+        git commit -F- <<EOF
+        Update Kubernetes manifest with new deployment container:
+          - Image: gcr.io/${PROJECT_ID}/${_IMAGE_NAME}:${TAG_NAME}
+          - BuildID: ${BUILD_ID}
+        EOF
+        git push git@github.com:tracplus/playground-manifests master
+    volumes:
+      - name: 'ssh'
+        path: /root/.ssh
+
+  # Apply all kubernetes manifests
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args:
+      - 'apply'
+      - '-f'
+      - 'playground-manifests/${_DEPLOYMENT_PATH}'
+    env:
+      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=playground'
+substitutions:
+  _IMAGE_NAME: scrum-board-server
+  _DEPLOYMENT_PATH: scrum-board/server
+  _DEPLOYMENT_NAMESPACE: scrum-board
+images:
+  - gcr.io/${PROJECT_ID}/${_IMAGE_NAME}:${TAG_NAME}
