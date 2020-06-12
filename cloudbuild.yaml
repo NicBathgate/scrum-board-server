@@ -65,7 +65,7 @@ steps:
         kubectl patch --local -o yaml -f ${_DEPLOYMENT_PATH}/00-deployment.yaml -p "$(cat patch.yaml)" > 00-deployment.yaml
         mv 00-deployment.yaml ${_DEPLOYMENT_PATH}/00-deployment.yaml
     env:
-      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
+      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
       - 'CLOUDSDK_CONTAINER_CLUSTER=playground'
 
   # commit the new manifest
