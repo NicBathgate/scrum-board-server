@@ -50,27 +50,29 @@ passport.deserializeUser((user, done) => {
 
 const callbackBaseUrl = process.env.APP_ROOT_URL || `http://localhost:${port}`;
 
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: process.env.APP_OAUTH_CLIENT_ID,
-      clientSecret: process.env.APP_OAUTH_CLIENT_SECRET,
-      callbackURL: callbackBaseUrl + "/api/auth/google/callback",
-      userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo"
-    },
-    (accessToken, refreshToken, profile, done) => {
-      // TODO: might need to add this back in to check user has tracplus.com email?
-      // if (profile._json.hd !== "tracplus.com") {
-      //   https.get(
-      //     "https://accounts.google.com/o/oauth2/revoke?token=" + accessToken,
-      //     function(res) {}
-      //   );
-      //   return done(null, false);
-      // }
-      done(null, profile);
-    }
-  )
-);
+if (process.env.NODE_ENV !== "development") {
+  passport.use(
+    new GoogleStrategy(
+      {
+        clientID: process.env.APP_OAUTH_CLIENT_ID,
+        clientSecret: process.env.APP_OAUTH_CLIENT_SECRET,
+        callbackURL: callbackBaseUrl + "/api/auth/google/callback",
+        userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo"
+      },
+      (accessToken, refreshToken, profile, done) => {
+        // TODO: might need to add this back in to check user has tracplus.com email?
+        // if (profile._json.hd !== "tracplus.com") {
+        //   https.get(
+        //     "https://accounts.google.com/o/oauth2/revoke?token=" + accessToken,
+        //     function(res) {}
+        //   );
+        //   return done(null, false);
+        // }
+        done(null, profile);
+      }
+    )
+  );
+}
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
