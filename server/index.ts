@@ -53,11 +53,8 @@ const callbackBaseUrl = process.env.APP_ROOT_URL || `http://localhost:${port}`;
 passport.use(
   new GoogleStrategy(
     {
-      clientID:
-        process.env.APP_OAUTH_CLIENT_ID ||
-        "126647422471-2t7pfb8rll2aic63hpgccjnuqjoidjj6.apps.googleusercontent.com",
-      clientSecret:
-        process.env.APP_OAUTH_CLIENT_SECRET || "W22ouUd81nbGDIsJmhIjr9o-",
+      clientID: process.env.APP_OAUTH_CLIENT_ID,
+      clientSecret: process.env.APP_OAUTH_CLIENT_SECRET,
       callbackURL: callbackBaseUrl + "/api/auth/google/callback",
       userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo"
     },
