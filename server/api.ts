@@ -50,7 +50,8 @@ async function fetchAuth(url: string | Request, options?: RequestInit) {
 router.get("/", async (req, res) => {
   try {
     const boards = await getBoards();
-    res.json(boards.values);
+    // remove OPS board from boards list
+    res.json(boards.values.filter(board => board.id !== 7));
   } catch (err) {
     console.log(err);
   }
