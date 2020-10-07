@@ -155,6 +155,17 @@ router.post("/issue/:key", async (req, res) => {
   }
 });
 
+router.get("/issue/:id/transitions", async (req, res) => {
+  try {
+    const transitions = await fetchAuth(
+      `${JIRA_URL}/rest/api/3/issue/${req.params.id}/transitions`
+    );
+    res.json(transitions);
+  } catch (err) {
+    console.log(err);
+  }
+});
+
 router.post("/issue/:id/transitions", async (req, res) => {
   try {
     const options = {
@@ -172,6 +183,17 @@ router.post("/issue/:id/transitions", async (req, res) => {
       options
     );
     res.json({ result });
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+router.get("/board/:id/configuration", async(req, res) => {
+  try {
+    const boardConfig = await fetchAuth(
+      `${JIRA_URL}/rest/agile/1.0/board/${req.params.id}/configuration`
+    );
+    res.json({ boardConfig: boardConfig });
   } catch (err) {
     console.log(err);
   }
