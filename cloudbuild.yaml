@@ -31,7 +31,7 @@ steps:
       - 'build'
       - '-t'
       - 'gcr.io/${_BUILD_PROJECT_ID}/${_IMAGE_NAME}:${TAG_NAME}'
-      - '.'
+      - 'server'
 
   # clone the branch of the manifests repo
   - name: 'gcr.io/cloud-builders/git'
