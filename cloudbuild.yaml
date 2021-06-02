@@ -6,7 +6,7 @@ steps:
     args:
       - '-c'
       - |
-        gsutil cp gs://${PROJECT_ID}-cloudbuilder/id_rsa.enc id_rsa.enc
+        gsutil cp gs://${_BUILD_PROJECT_ID}-cloudbuilder/id_rsa.enc id_rsa.enc
         mkdir keys
         gcloud kms decrypt \
           --ciphertext-file=id_rsa.enc \
@@ -19,7 +19,7 @@ steps:
         Hostname github.com
         IdentityFile /root/.ssh/id_rsa
         EOF
-        gsutil cp gs://${PROJECT_ID}-cloudbuilder/known_hosts keys/known_hosts
+        gsutil cp gs://${_BUILD_PROJECT_ID}-cloudbuilder/known_hosts keys/known_hosts
         cp keys/* /root/.ssh
     volumes:
       - name: 'ssh'
@@ -30,14 +30,16 @@ steps:
     args:
       - 'build'
       - '-t'
-      - 'gcr.io/${PROJECT_ID}/${_IMAGE_NAME}:${TAG_NAME}'
-      - 'server'
+      - 'gcr.io/${_BUILD_PROJECT_ID}/${_IMAGE_NAME}:${TAG_NAME}'
+      - '.'
 
-  # clone the manifests repo
+  # clone the branch of the manifests repo
   - name: 'gcr.io/cloud-builders/git'
     args:
       - 'clone'
-      - 'git@github.com:tracplus/playground-manifests'
+      - '--branch'
+      - '${_U1_MANIFESTS_BRANCH}'
+      - 'git@github.com:tracplus/u1-manifests'
     volumes:
       - name: 'ssh'
         path: /root/.ssh
@@ -48,25 +50,19 @@ steps:
     args:
       - '-c'
       - |
-        # given we are using a bash entrypoint we need to manually retrieve cluster credentials
-        gcloud container clusters get-credentials --zone "$$CLOUDSDK_COMPUTE_ZONE" "$$CLOUDSDK_CONTAINER_CLUSTER"
-        cd playground-manifests
-        # Generate a patch file for the deployment, updating the image
+        cd u1-manifests
+        # generate a patch file for the deployment, updating the image
         cat <<EOF > patch.yaml
-        metadata:
-          namespace: ${_DEPLOYMENT_NAMESPACE}
         spec:
           template:
             spec:
               containers:
                 - name: ${_IMAGE_NAME}
-                  image: gcr.io/${PROJECT_ID}/${_IMAGE_NAME}:${TAG_NAME}
+                  image: gcr.io/${_BUILD_PROJECT_ID}/${_IMAGE_NAME}:${TAG_NAME}
         EOF
         kubectl patch --local -o yaml -f ${_DEPLOYMENT_PATH}/00-deployment.yaml -p "$(cat patch.yaml)" > 00-deployment.yaml
+        # cannot overwrite ${_DEPLOYMENT_PATH}/00-deployment.yaml until kubectl patch completes
         mv 00-deployment.yaml ${_DEPLOYMENT_PATH}/00-deployment.yaml
-    env:
-      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
-      - 'CLOUDSDK_CONTAINER_CLUSTER=playground'
 
   # commit the new manifest
   - name: 'gcr.io/cloud-builders/git'
@@ -74,8 +70,7 @@ steps:
     args:
       - '-c'
       - |
-        # path doesn't persist between build steps
-        cd playground-manifests
+        cd u1-manifests
         # Retrive the service account details
         ACTIVE_ACCOUNT=$(gcloud auth list --filter=status:ACTIVE --format="value(account)")
         # Commit metadata
@@ -84,26 +79,19 @@ steps:
         git add ${_DEPLOYMENT_PATH}/00-deployment.yaml
         git commit -F- <<EOF
         Update Kubernetes manifest with new deployment container:
-          - Image: gcr.io/${PROJECT_ID}/${_IMAGE_NAME}:${TAG_NAME}
+          - Image: gcr.io/${_BUILD_PROJECT_ID}/${_IMAGE_NAME}:${TAG_NAME}
           - BuildID: ${BUILD_ID}
         EOF
-        git push git@github.com:tracplus/playground-manifests master
+        git push git@github.com:tracplus/u1-manifests ${_U1_MANIFESTS_BRANCH}
     volumes:
       - name: 'ssh'
         path: /root/.ssh
 
-  # Apply all kubernetes manifests
-  - name: 'gcr.io/cloud-builders/kubectl'
-    args:
-      - 'apply'
-      - '-f'
-      - 'playground-manifests/${_DEPLOYMENT_PATH}'
-    env:
-      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
-      - 'CLOUDSDK_CONTAINER_CLUSTER=playground'
 substitutions:
   _IMAGE_NAME: scrum-board-server
-  _DEPLOYMENT_PATH: scrum-board/server
-  _DEPLOYMENT_NAMESPACE: scrum-board
+  _DEPLOYMENT_NAMESPACE: playground
+  _DEPLOYMENT_PATH: main-stag/playground/scrum-server
+  _BUILD_PROJECT_ID: u1-build
+  _U1_MANIFESTS_BRANCH: stag
 images:
-  - gcr.io/${PROJECT_ID}/${_IMAGE_NAME}:${TAG_NAME}
+  - gcr.io/${_BUILD_PROJECT_ID}/${_IMAGE_NAME}:${TAG_NAME}
