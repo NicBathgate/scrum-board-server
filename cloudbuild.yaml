@@ -1,0 +1,97 @@
+steps:
+  # The Dockerfile needs github credentials to build. First grab those.
+  # Also copy them to /root/.ssh for later build steps
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gsutil cp gs://${_BUILD_PROJECT_ID}-cloudbuilder/id_rsa.enc id_rsa.enc
+        mkdir keys
+        gcloud kms decrypt \
+          --ciphertext-file=id_rsa.enc \
+          --plaintext-file=keys/id_rsa \
+          --location=global \
+          --keyring=tracplusbuild \
+          --key=github
+        chmod 600 keys/id_rsa
+        cat <<EOF > keys/config
+        Hostname github.com
+        IdentityFile /root/.ssh/id_rsa
+        EOF
+        gsutil cp gs://${_BUILD_PROJECT_ID}-cloudbuilder/known_hosts keys/known_hosts
+        cp keys/* /root/.ssh
+    volumes:
+      - name: 'ssh'
+        path: /root/.ssh
+
+  # build the image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/${_BUILD_PROJECT_ID}/${_IMAGE_NAME}:${TAG_NAME}'
+      - 'server'
+
+  # clone the branch of the manifests repo
+  - name: 'gcr.io/cloud-builders/git'
+    args:
+      - 'clone'
+      - '--branch'
+      - '${_U1_MANIFESTS_BRANCH}'
+      - 'git@github.com:tracplus/u1-manifests'
+    volumes:
+      - name: 'ssh'
+        path: /root/.ssh
+
+  # patch the k8s manifest
+  - name: 'gcr.io/cloud-builders/kubectl'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        cd u1-manifests
+        # generate a patch file for the deployment, updating the image
+        cat <<EOF > patch.yaml
+        spec:
+          template:
+            spec:
+              containers:
+                - name: ${_IMAGE_NAME}
+                  image: gcr.io/${_BUILD_PROJECT_ID}/${_IMAGE_NAME}:${TAG_NAME}
+        EOF
+        kubectl patch --local -o yaml -f ${_DEPLOYMENT_PATH}/00-deployment.yaml -p "$(cat patch.yaml)" > 00-deployment.yaml
+        # cannot overwrite ${_DEPLOYMENT_PATH}/00-deployment.yaml until kubectl patch completes
+        mv 00-deployment.yaml ${_DEPLOYMENT_PATH}/00-deployment.yaml
+
+  # commit the new manifest
+  - name: 'gcr.io/cloud-builders/git'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        cd u1-manifests
+        # Retrive the service account details
+        ACTIVE_ACCOUNT=$(gcloud auth list --filter=status:ACTIVE --format="value(account)")
+        # Commit metadata
+        git config user.email "$${ACTIVE_ACCOUNT}"
+        git config user.name "Google Container Builder"
+        git add ${_DEPLOYMENT_PATH}/00-deployment.yaml
+        git commit -F- <<EOF
+        Update Kubernetes manifest with new deployment container:
+          - Image: gcr.io/${_BUILD_PROJECT_ID}/${_IMAGE_NAME}:${TAG_NAME}
+          - BuildID: ${BUILD_ID}
+        EOF
+        git push git@github.com:tracplus/u1-manifests ${_U1_MANIFESTS_BRANCH}
+    volumes:
+      - name: 'ssh'
+        path: /root/.ssh
+
+substitutions:
+  _IMAGE_NAME: scrum-board-server
+  _DEPLOYMENT_NAMESPACE: playground
+  _DEPLOYMENT_PATH: main-stag/playground/scrum-server
+  _BUILD_PROJECT_ID: u1-build
+  _U1_MANIFESTS_BRANCH: stag
+images:
+  - gcr.io/${_BUILD_PROJECT_ID}/${_IMAGE_NAME}:${TAG_NAME}

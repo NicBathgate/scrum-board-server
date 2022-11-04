@@ -12,10 +12,7 @@ app.use(cors({ origin: [ "http://localhost:3000", "http://localhost:3001" ] }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-const api = require("./api");
-app.use("/api", isAuthenticated, api);
-
-app.post('/login', (req, res) => {
+app.post('/api/login', (req, res) => {
   if(req.body.username === USER.username && req.body.password === USER.password) {
     jwt.sign({ USER }, SECRET, (err, token) => {
       res.json({token});
@@ -24,6 +21,9 @@ app.post('/login', (req, res) => {
     res.sendStatus(401);
   }
 });
+
+const api = require("./api");
+app.use("/api", isAuthenticated, api);
 
 app.listen(8080, () => console.log("Listening on port 8080"));
 
